@@ -1,129 +1,74 @@
-import { useState } from 'react';
-import axios from 'axios';
-import './App.css';
+import { useState } from "react";
+import axios from "axios";
+import "./App.css";
+import Admin from "./Admin"; // Import the Admin component
 
 function App() {
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [study, setStudy] = useState('');
-  const [college, setCollege] = useState('');
-  
-  // State to track whether the user has successfully signed up
-  const [isSignedUp, setIsSignedUp] = useState(false);
+  const [name, setName] = useState("");
+  const [gmail, setGmail] = useState("");
+  const [study, setStudy] = useState("");
+  const [photo, setPhoto] = useState(null); // Store file, not URL
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
-  // State to track login form visibility
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const handleFileChange = (e) => {
+    setPhoto(e.target.files[0]); // Store the selected file
+  };
 
-  // Handle Sign-up form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!photo) {
+      alert("Please choose a photo!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("gmail", gmail);
+    formData.append("study", study);
+    formData.append("photo", photo); // Attach file
 
     try {
-      await axios.post('http://localhost:5000/adduser', {
-        Name: name,
-        Password: password,
-        Email: email,
-        Pincode: pincode,
-        Study: study,
-        College: college,
+      const response = await axios.post("http://localhost:5000/adduser", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log('User added successfully');
-      setIsSignedUp(true);
+
+      console.log("Application submitted successfully:", response.data);
+      setIsSubmitted(true);
     } catch (err) {
-      console.error('Error:', err);
+      console.error("Error:", err);
+      alert("Something went wrong. Please try again.");
     }
   };
 
-  // Handle Login form submission
-  const handleLoginSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.post('http://localhost:5000/login', {
-        Email: email,
-        Password: password,
-      });
-      console.log(response.data);
-      setIsLoggedIn(true); // User is logged in
-
-      // Redirect to the home page (or show a success message)
-      alert('Login Successful! Redirecting to home...');
-      // You can use window.location to redirect
-      // window.location.href = "/home"; // You can replace this with the actual home page URL.
-    } catch (err) {
-      console.error('Error:', err);
-      alert('Invalid credentials, please try again.');
-    }
-  };
+  if (showAdmin) {
+    return <Admin />;
+  }
 
   return (
     <>
-      {!isLoggedIn ? (
-        !isSignedUp ? (
-          // Signup Form
-          <form onSubmit={handleSubmit}>
-            <h1>Signup Form</h1>
-            <h2>Enter Your Name:</h2>
-            <input
-              type="text"
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter Your Name..."
-            />
-            <h2>Enter Your Email ID:</h2>
-            <input
-              type="email"
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter Your Email..."
-            />
-            <h2>Enter Your Pincode:</h2>
-            <input
-              type="text"
-              onChange={(e) => setPincode(e.target.value)}
-              placeholder="Enter Your Pincode..."
-            />
-            <h2>Enter Your Study:</h2>
-            <input
-              type="text"
-              onChange={(e) => setStudy(e.target.value)}
-              placeholder="Enter Your Study Field..."
-            />
-            <h2>Enter Your College/School Name:</h2>
-            <input
-              type="text"
-              onChange={(e) => setCollege(e.target.value)}
-              placeholder="Enter Your College/School..."
-            />
-            <h2>Enter Your Password:</h2>
-            <input
-              type="password"
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter Your Password..."
-            />
-            <button type="submit">Submit</button>
-          </form>
-        ) : (
-          // Login Form after successful signup
-          <form onSubmit={handleLoginSubmit}>
-            <h1>Login Form</h1>
-            <h2>Enter Your Email ID:</h2>
-            <input
-              type="email"
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter Your Email..."
-            />
-            <h2>Enter Your Password:</h2>
-            <input
-              type="password"
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter Your Password..."
-            />
-            <button type="submit">Login</button>
-          </form>
-        )
+      <button className="admin-button" onClick={() => setShowAdmin(true)}>
+        Admin
+      </button>
+
+      {!isSubmitted ? (
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
+          <h1>Application Form</h1>
+          <h2>Enter Your Name:</h2>
+          <input type="text" onChange={(e) => setName(e.target.value)} placeholder="Enter Your Name..." required />
+          <h2>Enter Your Email ID:</h2>
+          <input type="email" onChange={(e) => setGmail(e.target.value)} placeholder="Enter Your Email..." required />
+          <h2>Enter Your Study Field:</h2>
+          <input type="text" onChange={(e) => setStudy(e.target.value)} placeholder="Enter Your Study Field..." required />
+          <h2>Choose Your Photo:</h2>
+          <input type="file" accept="image/*" onChange={handleFileChange} required />
+          <button type="submit">Submit</button>
+        </form>
       ) : (
-        <h2>Welcome to the Home Page!</h2> // This can be the home page after login
+        <div>
+          <h2>Your application has been submitted successfully!</h2>
+          <p>Thank you for submitting your application.</p>
+        </div>
       )}
     </>
   );
