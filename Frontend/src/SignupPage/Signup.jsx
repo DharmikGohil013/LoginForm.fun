@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import './Signup.css';
 
 function Signup() {
@@ -10,19 +11,44 @@ function Signup() {
     confirmPassword: '',
   });
 
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Signup Successful!'); // Placeholder action
+    setError('');
+    setSuccess('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/signup', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.data) {
+        setSuccess('Signup Successful! You can now log in.');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Signup failed');
+    }
   };
 
   return (
     <div className="signup-container">
       <div className="signup-box">
         <h2>Sign Up</h2>
+        {error && <p className="error-message">{error}</p>}
+        {success && <p className="success-message">{success}</p>}
         <form onSubmit={handleSubmit}>
           <div className="input-group">
             <input
